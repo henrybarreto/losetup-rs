@@ -1,0 +1,14 @@
+[package]
+name = "losetup-rs"
+description = "A implementation of losetup for managing loop devices."
+authors = ["Henry Barreto <contato@henrybarreto.dev>"]
+keywords = ["libc", "losetup", "loopback", "block-device"]
+categories = ["command-line-utilities", "filesystem"]
+version = "0.1.0"
+edition = "2024"
+repository = "https://github.com/henrybarreto/losetup-rs"
+license = "MIT"
+license-file = "LICESE"
+
+[dependencies]
+libc = "0.2.171"
