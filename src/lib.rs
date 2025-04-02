@@ -6,9 +6,36 @@ use std::{
     os::fd::{AsFd, RawFd},
 };
 
-const LOOP_CTL_GET_FREE: u64 = 0x4C82;
-const LOOP_SET_FD: u64 = 0x4C00;
-const LOOP_CLR_FD: u64 = 0x4C01;
+/// Sets up a loop device by associating it with a file descriptor
+pub const LOOP_SET_FD: u64 = 0x4C00;
+/// Clears a loop device, disassociating it from its backing file
+pub const LOOP_CLR_FD: u64 = 0x4C01;
+/// Sets status information for a loop device (legacy version)
+pub const LOOP_SET_STATUS: u64 = 0x4C02;
+/// Gets status information from a loop device (legacy version)
+pub const LOOP_GET_STATUS: u64 = 0x4C03;
+/// Sets status information for a loop device with 64-bit structure
+pub const LOOP_SET_STATUS64: u64 = 0x4C04;
+/// Gets status information from a loop device with 64-bit structure
+pub const LOOP_GET_STATUS64: u64 = 0x4C05;
+/// Changes the backing file descriptor for a loop device
+pub const LOOP_CHANGE_FD: u64 = 0x4C06;
+/// Sets the capacity (size) of the loop device
+pub const LOOP_SET_CAPACITY: u64 = 0x4C07;
+/// Enables or disables direct I/O on the loop device
+pub const LOOP_SET_DIRECT_IO: u64 = 0x4C08;
+/// Sets the block size for the loop device
+pub const LOOP_SET_BLOCK_SIZE: u64 = 0x4C09;
+/// Configures multiple loop device parameters in a single operation
+pub const LOOP_CONFIGURE: u64 = 0x4C0A;
+
+// /dev/loop-control interface
+/// Adds a new loop device to the system
+pub const LOOP_CTL_ADD: u64 = 0x4C80;
+/// Removes a loop device from the system
+pub const LOOP_CTL_REMOVE: u64 = 0x4C81;
+/// Gets the number of the next available free loop device
+pub const LOOP_CTL_GET_FREE: u64 = 0x4C82;
 
 /// A Simple losetup implementation for managing Linux loop devices.
 ///
