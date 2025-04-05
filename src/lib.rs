@@ -41,29 +41,6 @@ pub const LOOP_CTL_GET_FREE: u64 = 0x4C82;
 ///
 /// Loop devices allow regular files to be accessed as block devices, which is
 /// useful for mounting disk images and creating virtual filesystems.
-///
-/// # Examples
-///
-/// ```
-/// use std::error::Error;
-///
-/// fn main() -> Result<(), Box<dyn Error>> {
-///     // Create a new loop control interface
-///     let loopctl = Losetup::open()?;
-///     
-///     // Find the next available loop device
-///     let device = loopctl.next_free()?;
-///     println!("Available loop device: {}", device);
-///     
-///     // Attach a disk image to the loop device
-///     Losetup::attach(&device, "/path/to/disk.img")?;
-///     
-///     // Later, detach the loop device
-///     Losetup::detach(&device)?;
-///     
-///     Ok(())
-/// }
-/// ```
 pub struct Losetup {
     fd: RawFd,
 }
@@ -85,13 +62,6 @@ impl Losetup {
     /// - The `/dev/loop-control` device does not exist
     /// - The user does not have sufficient permissions
     /// - The system does not support loop devices
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let loopctl = Losetup::open()?;
-    ///
-    /// ```
     pub fn open() -> Result<Self> {
         let fd = unsafe { open(CString::new("/dev/loop-control")?.as_ptr(), O_RDWR) };
         if fd < 0 {
@@ -121,8 +91,11 @@ impl Losetup {
     /// # Examples
     ///
     /// ```
-    /// let loopctl = Losetup::open()?;
-    /// let device = loopctl.next_free()?;
+    /// use losetup_rs::Losetup;
+    ///
+    /// let loopctl = Losetup::open().unwrap();
+    /// let device = loopctl.next_free().unwrap();
+    ///
     /// println!("Next free loop device: {}", device);
     /// ```
     pub fn next_free(&self) -> Result<String> {
@@ -161,9 +134,12 @@ impl Losetup {
     /// # Examples
     ///
     /// ```
-    /// let loopctl = Losetup::open()?;
-    /// let device = loopctl.next_free()?;
-    /// Losetup::attach(&device, "/path/to/disk.img")?;
+    /// use losetup_rs::Losetup;
+    ///
+    /// let loopctl = Losetup::open().unwrap();
+    /// let device = loopctl.next_free().unwrap();
+    ///
+    /// loopctl.attach(&device, "/path/to/disk.img").unwrap();;
     /// ```
     ///
     /// # Note
@@ -213,8 +189,16 @@ impl Losetup {
     /// # Examples
     ///
     /// ```
-    /// // After you're done using the loop device
-    /// Losetup::detach("/dev/loop0")?;
+    /// use losetup_rs::Losetup;
+    ///
+    /// let loopctl = Losetup::open().unwrap();
+    /// let device = loopctl.next_free().unwrap();
+    ///
+    /// loopctl.attach(&device, "/path/to/disk.img").unwrap();;
+    ///
+    /// // operate over attached device.
+    ///
+    /// loopctl.detach(&device).unwrap();
     /// ```
     ///
     /// # Note
