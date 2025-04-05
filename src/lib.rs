@@ -6,6 +6,57 @@ use std::{
     os::fd::{AsFd, RawFd},
 };
 
+const LO_NAME_SIZE: usize = 64;
+const LO_KEY_SIZE: usize = 32;
+
+/// Represents the status information of a loop device (64-bit version).
+///
+/// This structure corresponds to the `loop_info64` struct used in the Linux kernel.
+/// It holds metadata about a loop device, including file association, encryption
+/// details, and offset/size limits.
+///
+/// Fields like `lo_file_name` and `lo_crypt_name` are null-terminated byte arrays
+/// and may require conversion to strings for readable output.
+///
+/// See `LOOP_GET_STATUS64` and `LOOP_SET_STATUS64` for ioctl usage.
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct LoopInfo64 {
+    lo_device: u64,
+    lo_inode: u64,
+    lo_rdevice: u64,
+    lo_offset: u64,
+    lo_sizelimit: u64,
+    lo_number: u32,
+    lo_encrypt_type: u32,
+    lo_encrypt_key_size: u32,
+    lo_flags: u32,
+    lo_file_name: [u8; LO_NAME_SIZE],
+    lo_crypt_name: [u8; LO_NAME_SIZE],
+    lo_encrypt_key: [u8; LO_KEY_SIZE],
+    lo_init: [u64; 2],
+}
+
+impl Default for LoopInfo64 {
+    fn default() -> Self {
+        Self {
+            lo_device: 0,
+            lo_inode: 0,
+            lo_rdevice: 0,
+            lo_offset: 0,
+            lo_sizelimit: 0,
+            lo_number: 0,
+            lo_encrypt_type: 0,
+            lo_encrypt_key_size: 0,
+            lo_flags: 0,
+            lo_file_name: [0; LO_NAME_SIZE],
+            lo_crypt_name: [0; LO_NAME_SIZE],
+            lo_encrypt_key: [0; LO_KEY_SIZE],
+            lo_init: [0; 2],
+        }
+    }
+}
+
 /// Sets up a loop device by associating it with a file descriptor
 pub const LOOP_SET_FD: u64 = 0x4C00;
 /// Clears a loop device, disassociating it from its backing file
@@ -219,6 +270,54 @@ impl Losetup {
         }
 
         Ok(())
+    }
+
+    /// Retrieves the status of a loop device.
+    ///
+    /// This function uses the `LOOP_GET_STATUS64` ioctl command to query the
+    /// configuration and metadata associated with a loop device.
+    ///
+    /// # Parameters
+    ///
+    /// * `device` - The path to the loop device (e.g., `/dev/loop0`)
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing a `LoopInfo64` structure on success, or an error
+    /// if the operation failed.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - The loop device could not be opened
+    /// - The ioctl call fails (e.g., if the device is not in use)
+    /// - The user does not have sufficient permissions
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use losetup_rs::Losetup;
+    ///
+    /// let device = "/dev/loop0";
+    /// match Losetup::status(device) {
+    ///     Ok(info) => println!("Device is active: {:?}", info),
+    ///     Err(err) => eprintln!("Failed to get status: {}", err),
+    /// }
+    /// ```
+    pub fn status(device: &str) -> Result<LoopInfo64> {
+        let fd = unsafe { open(CString::new(device)?.as_ptr(), O_RDWR) };
+        if fd < 0 {
+            return Err(Error::last_os_error());
+        }
+
+        let mut info = LoopInfo64::default();
+
+        let res = unsafe { ioctl(fd, LOOP_GET_STATUS64, &mut info) };
+        if res < 0 {
+            return Err(Error::last_os_error());
+        }
+
+        Ok(info)
     }
 }
 
