@@ -150,14 +150,12 @@ impl Losetup {
     /// println!("Next free loop device: {}", device);
     /// ```
     pub fn next_free(&self) -> Result<String> {
-        let mut loop_num: i32 = -1;
-
-        let res = unsafe { ioctl(self.fd, LOOP_CTL_GET_FREE, &mut loop_num) };
+        let res = unsafe { ioctl(self.fd, LOOP_CTL_GET_FREE) };
         if res < 0 {
             return Err(Error::last_os_error());
         }
 
-        Ok(format!("/dev/loop{}", loop_num))
+        Ok(format!("/dev/loop{}", res))
     }
 
     /// Attaches a file to a loop device.
